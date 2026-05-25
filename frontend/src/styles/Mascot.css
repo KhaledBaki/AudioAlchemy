@@ -2,18 +2,31 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
 }
 
 .mascot {
     position: relative;
     width: 180px;
     height: 260px;
-    transition: transform 0.12s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.08));
+    animation: mascotEntry 0.8s ease-out;
+}
+
+@keyframes mascotEntry {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .mascot-bopping {
-    transform: translateY(-14px);
+    transform: translateY(-18px);
 }
 
 .mascot-note-body {
@@ -26,6 +39,7 @@
     border: 4px solid var(--secondary-color);
     border-radius: 50%;
     z-index: 3;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
 .mascot-note-stem {
@@ -38,6 +52,7 @@
     border: 4px solid var(--secondary-color);
     border-radius: 10px;
     z-index: 2;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .mascot-note-flag {
@@ -52,6 +67,7 @@
     border-radius: 0 28px 28px 0;
     transform: skewY(8deg);
     z-index: 1;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
 .mascot-eye {
@@ -80,6 +96,7 @@
     height: 8px;
     background-color: var(--secondary-color);
     border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .mascot-mouth {
@@ -122,6 +139,7 @@
     border: 4px solid var(--secondary-color);
     border-radius: 16px 16px 12px 12px;
     z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .mascot-left-shoe {
@@ -135,8 +153,193 @@
 }
 
 .mascot-label {
-    margin-top: 10px;
+    margin-top: 16px;
     font-style: italic;
     color: var(--text-color);
     text-align: center;
+    font-size: 0.95rem;
+    opacity: 0.9;
+    letter-spacing: 0.3px;
+    animation: labelFade 0.8s ease-out 0.2s both;
+}
+
+@keyframes labelFade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 0.9;
+    }
+}.mascot-wrapper {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     margin-bottom: 32px;
+ }
+
+.mascot {
+    position: relative;
+    width: 180px;
+    height: 260px;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.08));
+    animation: mascotEntry 0.8s ease-out;
+}
+
+@keyframes mascotEntry {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.mascot-bopping {
+    transform: translateY(-18px);
+}
+
+.mascot-note-body {
+    position: absolute;
+    bottom: 48px;
+    left: 28px;
+    width: 95px;
+    height: 95px;
+    background-color: var(--accent-color);
+    border: 4px solid var(--secondary-color);
+    border-radius: 50%;
+    z-index: 3;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.mascot-note-stem {
+    position: absolute;
+    bottom: 128px;
+    left: 102px;
+    width: 14px;
+    height: 110px;
+    background-color: var(--accent-color);
+    border: 4px solid var(--secondary-color);
+    border-radius: 10px;
+    z-index: 2;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.mascot-note-flag {
+    position: absolute;
+    top: 6px;
+    left: 114px;
+    width: 60px;
+    height: 50px;
+    background-color: var(--accent-color);
+    border: 4px solid var(--secondary-color);
+    border-left: none;
+    border-radius: 0 28px 28px 0;
+    transform: skewY(8deg);
+    z-index: 1;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+}
+
+.mascot-eye {
+    position: absolute;
+    top: 24px;
+    width: 20px;
+    height: 30px;
+    background-color: white;
+    border: 3px solid var(--secondary-color);
+    border-radius: 50%;
+}
+
+.left-eye {
+    left: 18px;
+}
+
+.right-eye {
+    right: 18px;
+}
+
+.eye-highlight {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--secondary-color);
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.mascot-mouth {
+    position: absolute;
+    left: 34px;
+    top: 58px;
+    width: 24px;
+    height: 14px;
+    border-bottom: 4px solid var(--background-color);
+    border-radius: 0 0 16px 16px;
+}
+
+.mascot-leg {
+    position: absolute;
+    width: 14px;
+    height: 48px;
+    background-color: var(--accent-color);
+    border: 4px solid var(--secondary-color);
+    border-radius: 12px;
+    z-index: 1;
+}
+
+.mascot-left-leg {
+    bottom: 18px;
+    left: 56px;
+    transform: rotate(6deg);
+}
+
+.mascot-right-leg {
+    bottom: 18px;
+    left: 92px;
+    transform: rotate(-6deg);
+}
+
+.mascot-shoe {
+    position: absolute;
+    width: 34px;
+    height: 20px;
+    background-color: var(--accent-color);
+    border: 4px solid var(--secondary-color);
+    border-radius: 16px 16px 12px 12px;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.mascot-left-shoe {
+    bottom: 0;
+    left: 42px;
+}
+
+.mascot-right-shoe {
+    bottom: 0;
+    left: 82px;
+}
+
+.mascot-label {
+    margin-top: 16px;
+    font-style: italic;
+    color: var(--text-color);
+    text-align: center;
+    font-size: 0.95rem;
+    opacity: 0.9;
+    letter-spacing: 0.3px;
+    animation: labelFade 0.8s ease-out 0.2s both;
+}
+
+@keyframes labelFade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 0.9;
+    }
 }

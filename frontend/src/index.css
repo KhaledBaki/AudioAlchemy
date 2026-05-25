@@ -8,16 +8,14 @@
   --accent-bg: rgba(170, 59, 255, 0.1);
   --accent-border: rgba(170, 59, 255, 0.5);
   --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-          rgba(0, 0, 0, 0.1) 0 10px 15px -3px,
-          rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+  --shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
 
-  --sans: system-ui, "Segoe UI", Roboto, sans-serif;
-  --heading: system-ui, "Segoe UI", Roboto, sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --heading: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
   --mono: ui-monospace, Consolas, monospace;
   --font-main: var(--sans);
 
-  /* Default app theme values */
+  /* Enhanced app theme values */
   --background-color: #F5F1ED;
   --card-color: #D4CAB0;
   --primary-color: #304F5F;
@@ -27,7 +25,7 @@
   --heading-color: #9D2F38;
 
   font-size: 18px;
-  line-height: 145%;
+  line-height: 1.6;
   font-family: var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
@@ -56,9 +54,7 @@
     --accent-bg: rgba(192, 132, 252, 0.15);
     --accent-border: rgba(192, 132, 252, 0.5);
     --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-            rgba(0, 0, 0, 0.4) 0 10px 15px -3px,
-            rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    --shadow: rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
   }
 
   #social .button-icon {
@@ -89,16 +85,16 @@ body {
   box-sizing: border-box;
 }
 
-h1,
-h2 {
+h1, h2 {
   font-family: var(--heading);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 h1 {
   font-size: 56px;
   letter-spacing: -1.68px;
   margin: 32px 0;
+  line-height: 1.2;
 }
 
 h2 {
@@ -106,6 +102,11 @@ h2 {
   line-height: 118%;
   letter-spacing: -0.24px;
   margin: 0 0 8px;
+}
+
+h3 {
+  font-weight: 500;
+  letter-spacing: -0.2px;
 }
 
 @media (max-width: 1024px) {
@@ -121,10 +122,10 @@ h2 {
 
 p {
   margin: 0;
+  line-height: 1.7;
 }
 
-code,
-.counter {
+code, .counter {
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
@@ -138,7 +139,7 @@ code {
   background: var(--code-bg);
 }
 
-/* Theme presets */
+/* Theme presets with enhanced styling */
 body[data-theme="rustic"] {
   --background-color: #F5F1ED;
   --card-color: #D4CAB0;
@@ -159,13 +160,6 @@ body[data-theme="concert"] {
   --heading-color: #F5F1ED;
 }
 
-
-body[data-theme="concert"] .selection-preview {
-  background-color: #F5F1ED;
-  border: 2px dashed #9D2F38;
-}
-
-
 body[data-theme="beach"] {
   --background-color: #F5F1ED;
   --card-color: #E8DDC7;
@@ -177,23 +171,12 @@ body[data-theme="beach"] {
 }
 
 /* Global heading color */
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   color: var(--heading-color);
 }
 
 /* Generic cards/panels/forms should inherit readable theme text */
-label,
-span,
-p,
-button,
-input,
-select,
-textarea {
+label, span, p, button, input, select, textarea {
   color: inherit;
 }
 
@@ -225,4 +208,24 @@ body[data-theme="concert"] .color-adjustment-section textarea {
 body[data-theme="concert"] .color-adjustment-section input::placeholder,
 body[data-theme="concert"] .color-adjustment-section textarea::placeholder {
   color: rgba(245, 241, 237, 0.7);
+}
+
+/* Smooth transitions for theme changes */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+button, input, select, textarea {
+  transition: all 0.3s ease;
+}
+
+/* Selection styles */
+::selection {
+  background-color: var(--accent-color);
+  color: #F5F1ED;
+}
+
+::-moz-selection {
+  background-color: var(--accent-color);
+  color: #F5F1ED;
 }
