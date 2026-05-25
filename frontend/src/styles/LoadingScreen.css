@@ -1,0 +1,89 @@
+/* LoadingScreen.css */
+/* Styles for the very first screen users see when they open AudioAlchemy */
+
+/* The full-screen container that holds everything */
+.loading-screen-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;                      /* Takes up the full browser window height */
+    background-color: var(--color-cream);
+    font-family: var(--font-main);
+}
+
+/* The big AudioAlchemy title */
+.loading-title {
+    font-size: 3.5rem;
+    color: var(--color-crimson);
+    letter-spacing: 6px;
+    text-align: center;
+    margin-bottom: 10px;
+
+    /* Fade in slowly from invisible to visible */
+    animation: fadeIn 2s ease forwards;
+}
+
+/* The subtitle tagline underneath the title */
+.loading-subtitle {
+    font-size: 1rem;
+    color: var(--color-slate);
+    letter-spacing: 3px;
+    margin-bottom: 40px;
+    font-style: italic;
+
+    animation: fadeIn 2.5s ease forwards;
+}
+
+/* The eight note mascot on the loading screen */
+.loading-mascot {
+    font-size: 5rem;
+    margin-bottom: 40px;
+
+    /* Bounce up and down continuously */
+    animation: bounce 0.8s infinite alternate ease-in-out;
+}
+
+/* The loading bar container (the outer track) */
+.loading-bar-track {
+    width: 300px;
+    height: 10px;
+    background-color: var(--color-parchment);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--color-slate);
+}
+
+/* The loading bar fill (the bar that grows) */
+.loading-bar-fill {
+    height: 100%;
+    width: 0%;
+    background-color: var(--color-crimson);
+    border-radius: 10px;
+
+    /* This transition makes the bar grow smoothly */
+    transition: width 0.1s linear;
+}
+
+/* "Loading..." text below the bar */
+.loading-text {
+    margin-top: 16px;
+    font-size: 0.9rem;
+    color: var(--color-slate);
+    letter-spacing: 2px;
+    font-style: italic;
+}
+
+/* --- Animations --- */
+
+/* Fade in from invisible */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Bounce up and down */
+@keyframes bounce {
+    from { transform: translateY(0px); }
+    to   { transform: translateY(-20px); }
+}

@@ -1,0 +1,112 @@
+.main-menu-page {
+    min-height: 100vh;
+    background-color: var(--background-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.main-menu-card {
+    background-color: var(--card-color);
+    border: 3px solid var(--secondary-color);
+    border-radius: 20px;
+    padding: 40px;
+    width: 100%;
+    max-width: 700px;
+    text-align: center;
+    box-shadow: 0 8px 20px rgba(48, 79, 95, 0.18);
+}
+
+.main-menu-title {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 10px;
+}
+
+.main-menu-subtitle {
+    font-size: 1.1rem;
+    color: var(--secondary-color);
+    margin-bottom: 30px;
+}
+
+.mascot-container {
+    margin-bottom: 30px;
+}
+
+.mascot-note {
+    font-size: 4rem;
+    color: var(--accent-color);
+}
+
+.mascot-label {
+    margin-top: 8px;
+    color: var(--secondary-color);
+    font-style: italic;
+}
+
+.main-menu-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.main-menu-button {
+    background-color: var(--primary-color);
+    color: #F5F1ED;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.main-menu-button:hover {
+    transform: translateY(-2px);
+    opacity: 0.92;
+}
+
+.theme-button-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.theme-button {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    font-weight: bold;
+}
+
+.theme-button:hover {
+    transform: translateY(-2px);
+    opacity: 0.92;
+}
+
+.rustic-theme-button {
+    background-color: #9D2F38;
+    color: #F5F1ED;
+}
+
+.concert-theme-button {
+    background-color: #2E2A26;
+    color: #F5F1ED;
+}
+
+.beach-theme-button {
+    background-color: #D4CAB0;
+    color: #304F5F;
+}
+
+.active-theme {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 2px;
+}
