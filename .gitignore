@@ -46,7 +46,7 @@ out/
 *.war
 *.ear
 
-# =========================
+
 # Environment / secrets
 .env
 .env.*
