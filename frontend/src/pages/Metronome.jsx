@@ -102,7 +102,7 @@ export default function Metronome() {
               type="range" className="bpm-slider" min="40" max="240" value={bpm}
               onChange={e => { setBpm(Number(e.target.value)); if (isPlaying) stopMetronome(); }}
             />
-            <div className="metro-slider-labels"><span>40</span><span>120</span><span>240</span></div>
+            <div className="metro-slider-labels"><span>40</span><span>140</span><span>240</span></div>
           </div>
 
           {/* Presets */}
