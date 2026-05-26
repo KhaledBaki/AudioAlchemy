@@ -3,168 +3,145 @@ import { useNavigate } from "react-router-dom";
 import "../styles/Metronome.css";
 import Mascot from "../components/Mascot";
 
-function Metronome() {
-    const navigate = useNavigate();
+const TIME_SIGS = [
+  { label:"4/4", value:"4/4", beats:4 },
+  { label:"3/4", value:"3/4", beats:3 },
+  { label:"6/8", value:"6/8", beats:6 },
+  { label:"2/4", value:"2/4", beats:2 },
+  { label:"5/4", value:"5/4", beats:5 },
+  { label:"7/8", value:"7/8", beats:7 },
+];
 
-    const [bpm, setBpm] = useState(120);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [currentBeat, setCurrentBeat] = useState(0);
-    const [isMascotBopping, setIsMascotBopping] = useState(false);
-    const [timeSignature, setTimeSignature] = useState("4/4");
+const PRESETS = [
+  { label:"60",  sub:"Largo" },
+  { label:"76",  sub:"Adagio" },
+  { label:"100", sub:"Andante" },
+  { label:"120", sub:"Moderato" },
+  { label:"140", sub:"Allegro" },
+  { label:"180", sub:"Presto" },
+];
 
-    const audioContextRef = useRef(null);
-    const intervalRef = useRef(null);
+export default function Metronome() {
+  const navigate = useNavigate();
+  const [bpm, setBpm] = useState(120);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentBeat, setCurrentBeat] = useState(0);
+  const [isBopping, setIsBopping] = useState(false);
+  const [pendulumSide, setPendulumSide] = useState("left");
+  const [timeSig, setTimeSig] = useState("4/4");
 
-    const timeSignatureOptions = [
-        { label: "4/4", value: "4/4", beats: 4 },
-        { label: "3/4", value: "3/4", beats: 3 },
-        { label: "6/8", value: "6/8", beats: 6 },
-        { label: "3/2", value: "3/2", beats: 3 },
-        { label: "2/4", value: "2/4", beats: 2 },
-        { label: "5/4", value: "5/4", beats: 5 },
-    ];
+  const audioCtxRef = useRef(null);
+  const intervalRef = useRef(null);
 
-    const selectedTimeSignature = timeSignatureOptions.find(
-        (option) => option.value === timeSignature
-    );
+  const selectedTS = TIME_SIGS.find(t => t.value === timeSig);
 
-    function playClickSound(isAccented) {
-        if (!audioContextRef.current) {
-            audioContextRef.current = new AudioContext();
-        }
+  const playClick = (accented) => {
+    if (!audioCtxRef.current) audioCtxRef.current = new AudioContext();
+    const ctx = audioCtxRef.current;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = accented ? 1200 : 880;
+    osc.type = "triangle";
+    gain.gain.setValueAtTime(accented ? 0.7 : 0.45, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + 0.06);
+  };
 
-        const audioCtx = audioContextRef.current;
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
+  const startMetronome = () => {
+    if (isPlaying) return;
+    setIsPlaying(true);
+    setCurrentBeat(0);
+    const ms = (60/bpm)*1000;
+    let beat = 0;
+    intervalRef.current = setInterval(() => {
+      const isFirst = beat % selectedTS.beats === 0;
+      playClick(isFirst);
+      setCurrentBeat(beat % selectedTS.beats);
+      setPendulumSide(s => s === "left" ? "right" : "left");
+      setIsBopping(true);
+      setTimeout(() => setIsBopping(false), 100);
+      beat++;
+    }, ms);
+  };
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
+  const stopMetronome = () => {
+    setIsPlaying(false); setCurrentBeat(0); setIsBopping(false);
+    clearInterval(intervalRef.current);
+  };
 
-        oscillator.frequency.value = isAccented ? 1000 : 800;
-        oscillator.type = "sine";
+  useEffect(() => () => clearInterval(intervalRef.current), []);
 
-        gainNode.gain.setValueAtTime(0.6, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(
-            0.001,
-            audioCtx.currentTime + 0.05
-        );
+  return (
+    <div className="metronome-page">
+      <div className="metro-bg-orb-1" /><div className="metro-bg-orb-2" />
 
-        oscillator.start(audioCtx.currentTime);
-        oscillator.stop(audioCtx.currentTime + 0.05);
-    }
+      <div className="metro-topbar">
+        <button className="metro-back-btn" onClick={() => { stopMetronome(); navigate("/menu"); }}>← Menu</button>
+        <span className="metro-topbar-title">Metronome</span>
+        {isPlaying && <span className="badge badge-gold" style={{marginLeft:"auto"}}>● {bpm} BPM</span>}
+      </div>
 
-    function startMetronome() {
-        if (isPlaying) return;
+      <div className="metronome-card">
+        <div className="metro-card-inner">
 
-        setIsPlaying(true);
-        setCurrentBeat(0);
+          {/* Mascot */}
+          <div className="metro-mascot-wrap">
+            <Mascot isBopping={isBopping} label="Keeping the beat!" />
+          </div>
 
-        const millisecondsPerBeat = (60 / bpm) * 1000;
-        let beatCount = 0;
+          {/* BPM */}
+          <div className="metro-bpm-display">
+            <div className="bpm-display">{bpm}</div>
+            <div className="bpm-label">Beats Per Minute</div>
+          </div>
 
-        intervalRef.current = setInterval(() => {
-            const isFirstBeat = beatCount % selectedTimeSignature.beats === 0;
+          {/* Slider */}
+          <div className="metro-slider-wrap">
+            <input
+              type="range" className="bpm-slider" min="40" max="240" value={bpm}
+              onChange={e => { setBpm(Number(e.target.value)); if (isPlaying) stopMetronome(); }}
+            />
+            <div className="metro-slider-labels"><span>40</span><span>120</span><span>240</span></div>
+          </div>
 
-            playClickSound(isFirstBeat);
-            setCurrentBeat(beatCount % selectedTimeSignature.beats);
+          {/* Presets */}
+          <div className="metro-presets">
+            {PRESETS.map(p => (
+              <button
+                key={p.label}
+                className={`metro-preset-btn${Number(p.label) === bpm ? " active" : ""}`}
+                onClick={() => { setBpm(Number(p.label)); if (isPlaying) stopMetronome(); }}
+              >
+                <span>{p.label}</span>
+                <span>{p.sub}</span>
+              </button>
+            ))}
+          </div>
 
-            setIsMascotBopping(true);
-            setTimeout(() => setIsMascotBopping(false), 100);
+          {/* Time signature */}
+          <div className="metro-timesig-row">
+            <div className="metro-timesig-label">Time Signature</div>
+            <select className="time-sig-select" value={timeSig}
+              onChange={e => { setTimeSig(e.target.value); if (isPlaying) stopMetronome(); }}>
+              {TIME_SIGS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </div>
 
-            beatCount++;
-        }, millisecondsPerBeat);
-    }
+          {/* Controls */}
+          <div className="metronome-controls">
+            <button className="start-button" onClick={startMetronome} disabled={isPlaying}>▶ Start</button>
+            <button className="stop-button" onClick={stopMetronome} disabled={!isPlaying}>■ Stop</button>
+          </div>
 
-    function stopMetronome() {
-        setIsPlaying(false);
-        setCurrentBeat(0);
-        setIsMascotBopping(false);
-        clearInterval(intervalRef.current);
-    }
-
-    useEffect(() => {
-        return () => {
-            clearInterval(intervalRef.current);
-        };
-    }, []);
-
-    return (
-        <div className="metronome-page">
-            <button
-                className="back-button"
-                onClick={() => {
-                    stopMetronome();
-                    navigate("/menu");
-                }}
-            >
-                ← Back to Menu
-            </button>
-
-            <div className="metronome-card">
-                <h1 className="metronome-title">Metronome</h1>
-                <p className="metronome-subtitle">Set your rhythm and tempo</p>
-
-                <Mascot isBopping={isMascotBopping} label="Keeping the beat!" />
-
-                <div className="bpm-display">{bpm}</div>
-                <div className="bpm-label">BPM</div>
-
-                <input
-                    type="range"
-                    className="bpm-slider"
-                    min="40"
-                    max="240"
-                    value={bpm}
-                    onChange={(e) => {
-                        setBpm(Number(e.target.value));
-                        if (isPlaying) {
-                            stopMetronome();
-                        }
-                    }}
-                />
-
-                <label className="time-sig-label">Time Signature</label>
-                <select
-                    className="time-sig-select"
-                    value={timeSignature}
-                    onChange={(e) => {
-                        setTimeSignature(e.target.value);
-                        if (isPlaying) {
-                            stopMetronome();
-                        }
-                    }}
-                >
-                    {timeSignatureOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                            {option.label}
-                        </option>
-                    ))}
-                </select>
-
-                <div className="metronome-controls">
-                    <button className="start-button" onClick={startMetronome}>
-                        ▶ Start
-                    </button>
-                    <button className="stop-button" onClick={stopMetronome}>
-                        ■ Stop
-                    </button>
-                </div>
-
-                <div className="beat-dots">
-                    {Array.from({ length: selectedTimeSignature.beats }).map((_, index) => (
-                        <div
-                            key={index}
-                            className={
-                                isPlaying && currentBeat === index
-                                    ? "beat-dot active-dot"
-                                    : "beat-dot"
-                            }
-                        ></div>
-                    ))}
-                </div>
-            </div>
+          {/* Beat dots */}
+          <div className="beat-dots">
+            {Array.from({length: selectedTS.beats}).map((_, i) => (
+              <div key={i} className={`beat-dot${isPlaying && currentBeat === i ? " active-dot" : ""}`} />
+            ))}
+          </div>
         </div>
-    );
+      </div>
+    </div>
+  );
 }
-
-export default Metronome;

@@ -1,345 +1,113 @@
+/* ═══════════════════════════════════════
+   MASCOT — DARK ALCHEMY EDITION
+   ═══════════════════════════════════════ */
+
 .mascot-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 32px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px;
 }
 
 .mascot {
-    position: relative;
-    width: 180px;
-    height: 260px;
-    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.08));
-    animation: mascotEntry 0.8s ease-out;
+  position: relative; width: 120px; height: 160px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 8px 24px rgba(247,201,72,0.12));
+  animation: mascotEntry 0.8s var(--ease-spring) both;
 }
 
 @keyframes mascotEntry {
-    from {
-        opacity: 0;
-        transform: scale(0.85);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .mascot-bopping {
-    transform: translateY(-18px);
+  transform: translateY(-16px) scale(1.04);
+  filter: drop-shadow(0 16px 32px rgba(247,201,72,0.25));
 }
 
+/* Note head body */
 .mascot-note-body {
-    position: absolute;
-    bottom: 48px;
-    left: 28px;
-    width: 95px;
-    height: 95px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 50%;
-    z-index: 3;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  position: absolute; bottom: 40px; left: 18px;
+  width: 68px; height: 62px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+  border-radius: 50%;
+  z-index: 3;
+  box-shadow: 0 4px 16px rgba(247,201,72,0.3), inset 0 1px 2px rgba(255,255,255,0.2);
+  transform: rotate(-8deg);
 }
 
-.mascot-note-stem {
-    position: absolute;
-    bottom: 128px;
-    left: 102px;
-    width: 14px;
-    height: 110px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 10px;
-    z-index: 2;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
-}
-
-.mascot-note-flag {
-    position: absolute;
-    top: 6px;
-    left: 114px;
-    width: 60px;
-    height: 50px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-left: none;
-    border-radius: 0 28px 28px 0;
-    transform: skewY(8deg);
-    z-index: 1;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-}
-
+/* Eyes */
 .mascot-eye {
-    position: absolute;
-    top: 24px;
-    width: 20px;
-    height: 30px;
-    background-color: white;
-    border: 3px solid var(--secondary-color);
-    border-radius: 50%;
+  position: absolute; top: 16px;
+  width: 14px; height: 20px;
+  background: var(--void);
+  border-radius: 50%;
+  z-index: 4;
 }
-
-.left-eye {
-    left: 18px;
-}
-
-.right-eye {
-    right: 18px;
-}
+.left-eye  { left: 14px; }
+.right-eye { right: 14px; }
 
 .eye-highlight {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 8px;
-    height: 8px;
-    background-color: var(--secondary-color);
-    border-radius: 50%;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  position: absolute; top: 4px; left: 3px;
+  width: 6px; height: 6px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 50%;
 }
 
+/* Mouth */
 .mascot-mouth {
-    position: absolute;
-    left: 34px;
-    top: 58px;
-    width: 24px;
-    height: 14px;
-    border-bottom: 4px solid var(--background-color);
-    border-radius: 0 0 16px 16px;
+  position: absolute; left: 22px; top: 42px;
+  width: 22px; height: 10px;
+  border-bottom: 3px solid var(--void);
+  border-radius: 0 0 12px 12px;
+  z-index: 4;
 }
 
-.mascot-leg {
-    position: absolute;
-    width: 14px;
-    height: 48px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 12px;
-    z-index: 1;
-}
-
-.mascot-left-leg {
-    bottom: 18px;
-    left: 56px;
-    transform: rotate(6deg);
-}
-
-.mascot-right-leg {
-    bottom: 18px;
-    left: 92px;
-    transform: rotate(-6deg);
-}
-
-.mascot-shoe {
-    position: absolute;
-    width: 34px;
-    height: 20px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 16px 16px 12px 12px;
-    z-index: 2;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-}
-
-.mascot-left-shoe {
-    bottom: 0;
-    left: 42px;
-}
-
-.mascot-right-shoe {
-    bottom: 0;
-    left: 82px;
-}
-
-.mascot-label {
-    margin-top: 16px;
-    font-style: italic;
-    color: var(--text-color);
-    text-align: center;
-    font-size: 0.95rem;
-    opacity: 0.9;
-    letter-spacing: 0.3px;
-    animation: labelFade 0.8s ease-out 0.2s both;
-}
-
-@keyframes labelFade {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 0.9;
-    }
-}.mascot-wrapper {
-     display: flex;
-     flex-direction: column;
-     align-items: center;
-     margin-bottom: 32px;
- }
-
-.mascot {
-    position: relative;
-    width: 180px;
-    height: 260px;
-    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.08));
-    animation: mascotEntry 0.8s ease-out;
-}
-
-@keyframes mascotEntry {
-    from {
-        opacity: 0;
-        transform: scale(0.85);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-.mascot-bopping {
-    transform: translateY(-18px);
-}
-
-.mascot-note-body {
-    position: absolute;
-    bottom: 48px;
-    left: 28px;
-    width: 95px;
-    height: 95px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 50%;
-    z-index: 3;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-}
-
+/* Stem */
 .mascot-note-stem {
-    position: absolute;
-    bottom: 128px;
-    left: 102px;
-    width: 14px;
-    height: 110px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 10px;
-    z-index: 2;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+  position: absolute; bottom: 96px; left: 73px;
+  width: 8px; height: 78px;
+  background: linear-gradient(to top, var(--gold), var(--gold-bright));
+  border-radius: 4px; z-index: 2;
+  box-shadow: 0 2px 8px rgba(247,201,72,0.2);
 }
 
+/* Flag */
 .mascot-note-flag {
-    position: absolute;
-    top: 6px;
-    left: 114px;
-    width: 60px;
-    height: 50px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-left: none;
-    border-radius: 0 28px 28px 0;
-    transform: skewY(8deg);
-    z-index: 1;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  position: absolute; top: 4px; left: 79px;
+  width: 40px; height: 36px;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-bright) 100%);
+  border-left: none;
+  border-radius: 0 20px 20px 0;
+  transform: skewY(6deg);
+  z-index: 1;
+  box-shadow: 0 2px 8px rgba(247,201,72,0.2);
 }
 
-.mascot-eye {
-    position: absolute;
-    top: 24px;
-    width: 20px;
-    height: 30px;
-    background-color: white;
-    border: 3px solid var(--secondary-color);
-    border-radius: 50%;
-}
-
-.left-eye {
-    left: 18px;
-}
-
-.right-eye {
-    right: 18px;
-}
-
-.eye-highlight {
-    position: absolute;
-    top: 4px;
-    left: 4px;
-    width: 8px;
-    height: 8px;
-    background-color: var(--secondary-color);
-    border-radius: 50%;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.mascot-mouth {
-    position: absolute;
-    left: 34px;
-    top: 58px;
-    width: 24px;
-    height: 14px;
-    border-bottom: 4px solid var(--background-color);
-    border-radius: 0 0 16px 16px;
-}
-
+/* Legs */
 .mascot-leg {
-    position: absolute;
-    width: 14px;
-    height: 48px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 12px;
-    z-index: 1;
+  position: absolute; width: 8px; height: 32px;
+  background: linear-gradient(to bottom, var(--gold), var(--gold-dim));
+  border-radius: 6px; z-index: 1;
+  box-shadow: 0 2px 6px rgba(247,201,72,0.15);
 }
+.mascot-left-leg  { bottom: 14px; left: 36px; transform: rotate(8deg); }
+.mascot-right-leg { bottom: 14px; left: 62px; transform: rotate(-8deg); }
 
-.mascot-left-leg {
-    bottom: 18px;
-    left: 56px;
-    transform: rotate(6deg);
-}
-
-.mascot-right-leg {
-    bottom: 18px;
-    left: 92px;
-    transform: rotate(-6deg);
-}
-
+/* Shoes */
 .mascot-shoe {
-    position: absolute;
-    width: 34px;
-    height: 20px;
-    background-color: var(--accent-color);
-    border: 4px solid var(--secondary-color);
-    border-radius: 16px 16px 12px 12px;
-    z-index: 2;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  position: absolute; width: 28px; height: 14px;
+  background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+  border-radius: 12px 12px 8px 8px; z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
+.mascot-left-shoe  { bottom: 0; left: 24px; }
+.mascot-right-shoe { bottom: 0; left: 54px; }
 
-.mascot-left-shoe {
-    bottom: 0;
-    left: 42px;
-}
-
-.mascot-right-shoe {
-    bottom: 0;
-    left: 82px;
-}
-
+/* Label */
 .mascot-label {
-    margin-top: 16px;
-    font-style: italic;
-    color: var(--text-color);
-    text-align: center;
-    font-size: 0.95rem;
-    opacity: 0.9;
-    letter-spacing: 0.3px;
-    animation: labelFade 0.8s ease-out 0.2s both;
-}
-
-@keyframes labelFade {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 0.9;
-    }
+  font-family: var(--font-body);
+  font-style: italic; font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center; letter-spacing: 0.02em;
+  animation: fadeIn 0.8s ease 0.4s both;
 }
