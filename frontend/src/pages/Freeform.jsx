@@ -2,252 +2,402 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Freeform.css";
 
-const FUNDAMENTAL_KEYS = ["1","2","3","4","5","6","7","8","9","0","-","="];
-const FUNDAMENTAL_CHORDS = ["C","C#","D","Eb","E","F","F#","G","Ab","A","Bb","B"];
-const VARIATION_KEYS = ["q","w","e","r","t","y","u","i","o"];
-const VARIATIONS = [
-  { label: "Major", suffix: "", intervals: [0,4,7] },
-  { label: "Minor", suffix: "m", intervals: [0,3,7] },
-  { label: "maj7",  suffix: "maj7", intervals: [0,4,7,11] },
-  { label: "m7",    suffix: "m7",   intervals: [0,3,7,10] },
-  { label: "sus2",  suffix: "sus2", intervals: [0,2,7] },
-  { label: "sus4",  suffix: "sus4", intervals: [0,5,7] },
-  { label: "dim",   suffix: "dim",  intervals: [0,3,6] },
-  { label: "aug",   suffix: "aug",  intervals: [0,4,8] },
-  { label: "dom7",  suffix: "7",    intervals: [0,4,7,10] },
+const FUNDAMENTAL_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="];
+
+/*
+  Put your REAL 12 fundamental chords here in the exact order your project uses.
+  Change these labels if your class/project uses a different exact set.
+*/
+const FUNDAMENTAL_CHORDS = [
+    "C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"
 ];
-const MUSIC_CIRCLE = ["C","G","D","A","E","B","F#","Db","Ab","Eb","Bb","F"];
-const NOTE_SEMITONE = { C:0,"C#":1,Db:1,D:2,"D#":3,Eb:3,E:4,F:5,"F#":6,Gb:6,G:7,"G#":8,Ab:8,A:9,"A#":10,Bb:10,B:11 };
 
-function midiToFreq(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-function getRootMidi(n) { return 60 + (NOTE_SEMITONE[n] ?? 0); }
-function buildChordName(root, variation) {
-  if (!variation || variation.label === "Major") return root;
-  if (variation.label === "Minor") return `${root}m`;
-  return `${root}${variation.suffix}`;
+/*
+  q to o = 9 variations
+  Added base Major and Minor first, as requested.
+  If your exact 9 variations differ, keep the same structure and just rename intervals/labels.
+*/
+const VARIATION_KEYS = ["q", "w", "e", "r", "t", "y", "u", "i", "o"];
+const VARIATIONS = [
+    { label: "Major", suffix: "", intervals: [0, 4, 7] },
+    { label: "Minor", suffix: "m", intervals: [0, 3, 7] },
+    { label: "maj7", suffix: "maj7", intervals: [0, 4, 7, 11] },
+    { label: "m7", suffix: "m7", intervals: [0, 3, 7, 10] },
+    { label: "sus2", suffix: "sus2", intervals: [0, 2, 7] },
+    { label: "sus4", suffix: "sus4", intervals: [0, 5, 7] },
+    { label: "dim", suffix: "dim", intervals: [0, 3, 6] },
+    { label: "aug", suffix: "aug", intervals: [0, 4, 8] },
+    { label: "7", suffix: "7", intervals: [0, 4, 7, 10] }
+];
+
+const MUSIC_CIRCLE = ["C", "G", "D", "A", "E", "B", "F#", "Db", "Ab", "Eb", "Bb", "F"];
+
+const NOTE_TO_SEMITONE = {
+    C: 0,
+    "C#": 1,
+    Db: 1,
+    D: 2,
+    "D#": 3,
+    Eb: 3,
+    E: 4,
+    F: 5,
+    "F#": 6,
+    Gb: 6,
+    G: 7,
+    "G#": 8,
+    Ab: 8,
+    A: 9,
+    "A#": 10,
+    Bb: 10,
+    B: 11
+};
+
+function midiToFreq(midi) {
+    return 440 * Math.pow(2, (midi - 69) / 12);
 }
 
-export default function Freeform() {
-  const navigate = useNavigate();
-  const [activeRoot, setActiveRoot] = useState("C");
-  const [activeVarIdx, setActiveVarIdx] = useState(0);
-  const [history, setHistory] = useState([]);
-  const [pressedKeys, setPressedKeys] = useState(new Set());
-  const [isPlaying, setIsPlaying] = useState(false);
+function getRootMidi(noteName) {
+    const semitone = NOTE_TO_SEMITONE[noteName] ?? 0;
+    return 60 + semitone;
+}
 
-  const audioCtxRef = useRef(null);
-  const activeChordRef = useRef(null);
-  const heldFundRef = useRef(null);
-  const heldVarRef = useRef(null);
+function buildDisplayChord(root, variation) {
+    if (!variation) return root;
+    if (variation.label === "Major") return root;
+    if (variation.label === "Minor") return `${root}m`;
+    return `${root}${variation.suffix}`;
+}
 
-  const activeVariation = VARIATIONS[activeVarIdx];
-  const displayedChord = useMemo(() => buildChordName(activeRoot, activeVariation), [activeRoot, activeVariation]);
+function Freeform() {
+    const navigate = useNavigate();
+    const [activeRoot, setActiveRoot] = useState("C");
+    const [activeVariationIndex, setActiveVariationIndex] = useState(0);
+    const [history, setHistory] = useState([]);
+    const [pressedKeys, setPressedKeys] = useState(new Set());
 
-  const ensureCtx = async () => {
-    if (!audioCtxRef.current)
-      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtxRef.current.state === "suspended")
-      await audioCtxRef.current.resume();
-    return audioCtxRef.current;
-  };
+    const audioContextRef = useRef(null);
+    const activeChordRef = useRef(null);
+    const heldFundamentalRef = useRef(null);
+    const heldVariationRef = useRef(null);
 
-  const stopChord = () => {
-    const active = activeChordRef.current;
-    if (!active) return;
-    const { ctx, gainNodes, oscillators } = active;
-    const now = ctx.currentTime;
-    gainNodes.forEach(g => { try { g.gain.cancelScheduledValues(now); g.gain.setTargetAtTime(0.0001, now, 0.08); } catch(e){} });
-    oscillators.forEach(o => { try { o.stop(now + 0.35); } catch(e){} });
-    activeChordRef.current = null;
-    setIsPlaying(false);
-  };
+    const activeVariation = VARIATIONS[activeVariationIndex];
 
-  const startChord = async (root, variation) => {
-    const ctx = await ensureCtx();
-    stopChord();
-    const rootMidi = getRootMidi(root);
-    const now = ctx.currentTime;
-    const oscillators = [], gainNodes = [];
-    variation.intervals.forEach((interval, idx) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      const filt = ctx.createBiquadFilter();
-      osc.type = idx % 2 === 0 ? "sawtooth" : "triangle";
-      osc.frequency.setValueAtTime(midiToFreq(rootMidi + interval + (idx === 0 ? -12 : 0)), now);
-      filt.type = "lowpass"; filt.frequency.setValueAtTime(1600, now);
-      gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.linearRampToValueAtTime(0.04, now + 0.08);
-      osc.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
-      osc.start(now);
-      oscillators.push(osc); gainNodes.push(gain);
-    });
-    activeChordRef.current = { ctx, oscillators, gainNodes };
-    setIsPlaying(true);
-  };
+    const displayedChord = useMemo(() => {
+        return buildDisplayChord(activeRoot, activeVariation);
+    }, [activeRoot, activeVariation]);
 
-  const play = async (root, varIdx) => {
-    const variation = VARIATIONS[varIdx];
-    setActiveRoot(root); setActiveVarIdx(varIdx);
-    const name = buildChordName(root, variation);
-    setHistory(prev => [name, ...prev].slice(0, 16));
-    await startChord(root, variation);
-  };
+    const ensureAudioContext = async () => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
 
-  const maybeRelease = () => {
-    if (heldFundRef.current === null && heldVarRef.current === null) stopChord();
-  };
+        if (audioContextRef.current.state === "suspended") {
+            await audioContextRef.current.resume();
+        }
 
-  useEffect(() => {
-    const onDown = async (e) => {
-      const tag = e.target.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
-      const key = e.key.toLowerCase();
-      setPressedKeys(prev => { if (prev.has(key)) return prev; const n = new Set(prev); n.add(key); return n; });
-      const fi = FUNDAMENTAL_KEYS.indexOf(key);
-      if (fi !== -1 && !e.repeat) {
-        e.preventDefault(); heldFundRef.current = fi;
-        await play(FUNDAMENTAL_CHORDS[fi], heldVarRef.current ?? activeVarIdx);
-        return;
-      }
-      const vi = VARIATION_KEYS.indexOf(key);
-      if (vi !== -1 && !e.repeat) {
-        e.preventDefault(); heldVarRef.current = vi;
-        await play(heldFundRef.current !== null ? FUNDAMENTAL_CHORDS[heldFundRef.current] : activeRoot, vi);
-      }
+        return audioContextRef.current;
     };
-    const onUp = (e) => {
-      const key = e.key.toLowerCase();
-      setPressedKeys(prev => { const n = new Set(prev); n.delete(key); return n; });
-      const fi = FUNDAMENTAL_KEYS.indexOf(key);
-      if (fi !== -1) { if (heldFundRef.current === fi) heldFundRef.current = null; maybeRelease(); }
-      const vi = VARIATION_KEYS.indexOf(key);
-      if (vi !== -1) { if (heldVarRef.current === vi) heldVarRef.current = null; maybeRelease(); }
-    };
-    const onBlur = () => {
-      heldFundRef.current = null; heldVarRef.current = null;
-      setPressedKeys(new Set()); stopChord();
-    };
-    window.addEventListener("keydown", onDown);
-    window.addEventListener("keyup", onUp);
-    window.addEventListener("blur", onBlur);
-    return () => {
-      window.removeEventListener("keydown", onDown);
-      window.removeEventListener("keyup", onUp);
-      window.removeEventListener("blur", onBlur);
-      stopChord();
-    };
-  }, [activeRoot, activeVarIdx]);
 
-  const onFundDown = async (i) => { heldFundRef.current = i; await play(FUNDAMENTAL_CHORDS[i], heldVarRef.current ?? activeVarIdx); };
-  const onVarDown  = async (i) => { heldVarRef.current = i; await play(heldFundRef.current !== null ? FUNDAMENTAL_CHORDS[heldFundRef.current] : activeRoot, i); };
-  const onUp = () => { heldFundRef.current = null; heldVarRef.current = null; stopChord(); };
+    const stopCurrentChord = () => {
+        const active = activeChordRef.current;
+        if (!active) return;
 
-  return (
-    <div className="freeform-page">
-      <div className="freeform-bg-orb-1" />
+        const { ctx, gainNodes, oscillators } = active;
+        const now = ctx.currentTime;
 
-      <div className="freeform-topbar">
-        <button className="freeform-back-btn" onClick={() => navigate("/menu")}>← Menu</button>
-        <span style={{fontFamily:'var(--font-heading)',fontWeight:700,fontSize:'0.9rem',color:'var(--text-bright)'}}>Freeform Play</span>
-        <div className="freeform-topbar-info">
-          <div className={`freeform-live-chord${isPlaying ? " active" : ""}`}>
-            {isPlaying ? "♪ " : ""}{displayedChord}
-          </div>
-        </div>
-      </div>
-
-      <div className="freeform-layout">
-        {/* Left — circle + status */}
-        <div className="freeform-circle-panel">
-          <div className="freeform-panel-label">Circle of Fifths</div>
-
-          <div className="music-circle">
-            {MUSIC_CIRCLE.map((chord, i) => {
-              const angle = (i / MUSIC_CIRCLE.length) * Math.PI * 2 - Math.PI / 2;
-              const r = 120;
-              return (
-                <div
-                  key={chord}
-                  className={`circle-chord${chord === activeRoot ? " active" : ""}`}
-                  style={{ transform: `translate(${Math.cos(angle)*r}px, ${Math.sin(angle)*r}px)` }}
-                >
-                  {chord}
-                </div>
-              );
-            })}
-            <div className="circle-center">
-              <span>Live Chord</span>
-              <strong>{displayedChord}</strong>
-              <small>{pressedKeys.size > 0 ? "Holding…" : "Press key"}</small>
-            </div>
-          </div>
-
-          <div className="freeform-status">
-            {[["Root", activeRoot], ["Variation", activeVariation.label], ["Chord", displayedChord]].map(([k,v]) => (
-              <div key={k} className="freeform-status-row">
-                <span className="freeform-status-key">{k}</span>
-                <span className="freeform-status-val">{v}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="freeform-panel-label">Recent Chords</div>
-          <div className="freeform-history-list">
-            {history.length === 0
-              ? <span style={{fontFamily:'var(--font-mono)',fontSize:'0.72rem',color:'var(--text-ghost)'}}>Play something…</span>
-              : history.map((ch, i) => (
-                <div key={`${ch}-${i}`} className="freeform-history-item">
-                  <span className="freeform-history-chord">{ch}</span>
-                  <span className="freeform-history-idx">#{i+1}</span>
-                </div>
-              ))
+        gainNodes.forEach((gain) => {
+            try {
+                gain.gain.cancelScheduledValues(now);
+                gain.gain.setTargetAtTime(0.0001, now, 0.08);
+            } catch (e) {
+                console.error(e);
             }
-          </div>
-        </div>
+        });
 
-        {/* Right — keyboard */}
-        <div className="freeform-keys-panel">
-          <div className="freeform-instructions">
-            {[["1–=","Root notes"],["q–o","Chord type"],["Hold","Sustain"]].map(([k,v]) => (
-              <div key={k} className="freeform-instruction-chip"><kbd>{k}</kbd>{v}</div>
-            ))}
-          </div>
+        oscillators.forEach((osc) => {
+            try {
+                osc.stop(now + 0.4);
+            } catch (e) {
+                console.error(e);
+            }
+        });
 
-          <div className="freeform-key-section">
-            <div className="freeform-key-section-title">Fundamental Chords (1 – =)</div>
-            <div className="freeform-key-grid freeform-key-grid-fundamentals">
-              {FUNDAMENTAL_CHORDS.map((chord, i) => (
-                <button
-                  key={`${chord}-${i}`}
-                  className={`key-button${pressedKeys.has(FUNDAMENTAL_KEYS[i]) ? " pressed" : ""}`}
-                  onMouseDown={() => onFundDown(i)} onMouseUp={onUp} onMouseLeave={onUp}
-                  onTouchStart={(e) => { e.preventDefault(); onFundDown(i); }} onTouchEnd={onUp}
-                >
-                  <span className="keycap">{FUNDAMENTAL_KEYS[i]}</span>
-                  <span className="key-name">{chord}</span>
-                </button>
-              ))}
+        activeChordRef.current = null;
+    };
+
+    const startChord = async (root, variation) => {
+        const ctx = await ensureAudioContext();
+
+        stopCurrentChord();
+
+        const rootMidi = getRootMidi(root);
+        const now = ctx.currentTime;
+        const oscillators = [];
+        const gainNodes = [];
+
+        variation.intervals.forEach((interval, index) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+
+            osc.type = index % 2 === 0 ? "sawtooth" : "triangle";
+            osc.frequency.setValueAtTime(midiToFreq(rootMidi + interval), now);
+
+            filter.type = "lowpass";
+            filter.frequency.setValueAtTime(1800, now);
+            filter.Q.setValueAtTime(1, now);
+
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.linearRampToValueAtTime(0.045, now + 0.08);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc.start(now);
+
+            oscillators.push(osc);
+            gainNodes.push(gain);
+        });
+
+        activeChordRef.current = { ctx, oscillators, gainNodes };
+    };
+
+    const refreshHeldChord = async (root, variationIndex) => {
+        const variation = VARIATIONS[variationIndex];
+        setActiveRoot(root);
+        setActiveVariationIndex(variationIndex);
+
+        const chordName = buildDisplayChord(root, variation);
+        setHistory((prev) => [chordName, ...prev].slice(0, 12));
+
+        await startChord(root, variation);
+    };
+
+    const maybeReleaseChord = () => {
+        if (heldFundamentalRef.current === null && heldVariationRef.current === null) {
+            stopCurrentChord();
+        }
+    };
+
+    useEffect(() => {
+        const handleKeyDown = async (event) => {
+            const tag = event.target.tagName;
+            if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+            const key = event.key.toLowerCase();
+
+            setPressedKeys((prev) => {
+                if (prev.has(key)) return prev;
+                const next = new Set(prev);
+                next.add(key);
+                return next;
+            });
+
+            const fundamentalIndex = FUNDAMENTAL_KEYS.indexOf(key);
+            if (fundamentalIndex !== -1 && !event.repeat) {
+                event.preventDefault();
+                heldFundamentalRef.current = fundamentalIndex;
+                const root = FUNDAMENTAL_CHORDS[fundamentalIndex];
+                const variationIndex =
+                    heldVariationRef.current !== null ? heldVariationRef.current : activeVariationIndex;
+                await refreshHeldChord(root, variationIndex);
+                return;
+            }
+
+            const variationIndex = VARIATION_KEYS.indexOf(key);
+            if (variationIndex !== -1 && !event.repeat) {
+                event.preventDefault();
+                heldVariationRef.current = variationIndex;
+                const root =
+                    heldFundamentalRef.current !== null
+                        ? FUNDAMENTAL_CHORDS[heldFundamentalRef.current]
+                        : activeRoot;
+                await refreshHeldChord(root, variationIndex);
+            }
+        };
+
+        const handleKeyUp = (event) => {
+            const key = event.key.toLowerCase();
+
+            setPressedKeys((prev) => {
+                const next = new Set(prev);
+                next.delete(key);
+                return next;
+            });
+
+            const fundamentalIndex = FUNDAMENTAL_KEYS.indexOf(key);
+            if (fundamentalIndex !== -1) {
+                if (heldFundamentalRef.current === fundamentalIndex) {
+                    heldFundamentalRef.current = null;
+                }
+                maybeReleaseChord();
+            }
+
+            const variationIndex = VARIATION_KEYS.indexOf(key);
+            if (variationIndex !== -1) {
+                if (heldVariationRef.current === variationIndex) {
+                    heldVariationRef.current = null;
+                }
+                maybeReleaseChord();
+            }
+        };
+
+        const handleBlur = () => {
+            heldFundamentalRef.current = null;
+            heldVariationRef.current = null;
+            setPressedKeys(new Set());
+            stopCurrentChord();
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("keyup", handleKeyUp);
+        window.addEventListener("blur", handleBlur);
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("keyup", handleKeyUp);
+            window.removeEventListener("blur", handleBlur);
+            stopCurrentChord();
+        };
+    }, [activeRoot, activeVariationIndex]);
+
+    const handleFundamentalMouseDown = async (index) => {
+        heldFundamentalRef.current = index;
+        await refreshHeldChord(
+            FUNDAMENTAL_CHORDS[index],
+            heldVariationRef.current !== null ? heldVariationRef.current : activeVariationIndex
+        );
+    };
+
+    const handleVariationMouseDown = async (index) => {
+        heldVariationRef.current = index;
+        await refreshHeldChord(
+            heldFundamentalRef.current !== null ? FUNDAMENTAL_CHORDS[heldFundamentalRef.current] : activeRoot,
+            index
+        );
+    };
+
+    const handleMouseUpAny = () => {
+        heldFundamentalRef.current = null;
+        heldVariationRef.current = null;
+        stopCurrentChord();
+    };
+
+    return (
+        <div className="freeform-page">
+            <div className="freeform-card">
+                <div className="freeform-topbar">
+                    <button className="freeform-menu-button" onClick={() => navigate("/menu")}>
+                        Back to Main Menu
+                    </button>
+                </div>
+
+                <div className="freeform-header">
+                    <h2>Freeform</h2>
+                    <p>
+                        Hold number keys for fundamental chords, then use q to o for chord types. The sound now sustains while held.
+                    </p>
+                </div>
+
+                <div className="freeform-layout">
+                    <div className="music-circle-panel">
+                        <h3>Music Circle</h3>
+                        <div className="music-circle">
+                            {MUSIC_CIRCLE.map((chord, index) => {
+                                const angle = (index / MUSIC_CIRCLE.length) * Math.PI * 2 - Math.PI / 2;
+                                const radius = 145;
+                                const x = Math.cos(angle) * radius;
+                                const y = Math.sin(angle) * radius;
+                                const isActive = chord === activeRoot;
+
+                                return (
+                                    <div
+                                        key={chord}
+                                        className={`circle-chord ${isActive ? "active" : ""}`}
+                                        style={{ transform: `translate(${x}px, ${y}px)` }}
+                                    >
+                                        {chord}
+                                    </div>
+                                );
+                            })}
+
+                            <div className="circle-center">
+                                <span>Live Chord</span>
+                                <strong>{displayedChord}</strong>
+                                <small>{pressedKeys.size > 0 ? "Holding input..." : "Press or hold to play"}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="freeform-side">
+                        <div className="freeform-panel">
+                            <h3>Fundamental Chords</h3>
+                            <div className="key-grid fundamental-grid">
+                                {FUNDAMENTAL_CHORDS.map((chord, index) => (
+                                    <button
+                                        key={`${chord}-${index}`}
+                                        className={`key-button ${pressedKeys.has(FUNDAMENTAL_KEYS[index]) ? "pressed" : ""}`}
+                                        type="button"
+                                        onMouseDown={() => handleFundamentalMouseDown(index)}
+                                        onMouseUp={handleMouseUpAny}
+                                        onMouseLeave={handleMouseUpAny}
+                                        onTouchStart={() => handleFundamentalMouseDown(index)}
+                                        onTouchEnd={handleMouseUpAny}
+                                    >
+                                        <span className="keycap">{FUNDAMENTAL_KEYS[index]}</span>
+                                        <span className="key-name">{chord}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="freeform-panel">
+                            <h3>Variations</h3>
+                            <div className="key-grid variation-grid">
+                                {VARIATIONS.map((variation, index) => (
+                                    <button
+                                        key={variation.label}
+                                        className={`key-button variation-button ${pressedKeys.has(VARIATION_KEYS[index]) ? "pressed" : ""}`}
+                                        type="button"
+                                        onMouseDown={() => handleVariationMouseDown(index)}
+                                        onMouseUp={handleMouseUpAny}
+                                        onMouseLeave={handleMouseUpAny}
+                                        onTouchStart={() => handleVariationMouseDown(index)}
+                                        onTouchEnd={handleMouseUpAny}
+                                    >
+                                        <span className="keycap">{VARIATION_KEYS[index]}</span>
+                                        <span className="key-name">{variation.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="freeform-panel live-panel">
+                            <h3>Live Status</h3>
+                            <p><strong>Root:</strong> {activeRoot}</p>
+                            <p><strong>Variation:</strong> {activeVariation.label}</p>
+                            <p><strong>Chord:</strong> {displayedChord}</p>
+                            <p><strong>Keyboard:</strong> 1 to = for roots, q to o for variations.</p>
+                        </div>
+
+                        <div className="freeform-panel history-panel">
+                            <h3>Recent Chords</h3>
+                            {history.length === 0 ? (
+                                <p>Hold a root and variation to start playing.</p>
+                            ) : (
+                                history.map((item, index) => (
+                                    <p key={`${item}-${index}`} className="history-item">
+                                        {index + 1}. {item}
+                                    </p>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div className="freeform-key-section">
-            <div className="freeform-key-section-title">Variations (q – o)</div>
-            <div className="freeform-key-grid freeform-key-grid-variations">
-              {VARIATIONS.map((v, i) => (
-                <button
-                  key={v.label}
-                  className={`key-button variation-button${pressedKeys.has(VARIATION_KEYS[i]) ? " pressed" : ""}`}
-                  onMouseDown={() => onVarDown(i)} onMouseUp={onUp} onMouseLeave={onUp}
-                  onTouchStart={(e) => { e.preventDefault(); onVarDown(i); }} onTouchEnd={onUp}
-                >
-                  <span className="keycap">{VARIATION_KEYS[i]}</span>
-                  <span className="key-name">{v.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }
+
+export default Freeform;

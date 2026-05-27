@@ -1,45 +1,62 @@
-import React,{useState,useEffect,useRef} from "react";
-import{useNavigate}from"react-router-dom";
-import"../styles/LoadingScreen.css";
-const MSGS=["Calibrating alchemical constants...","Tuning harmonic frequencies...","Loading chord progressions...","Preparing your studio...","Warming up instruments..."];
-const HINTS=[{icon:"🎹",label:"Freeform"},{icon:"🤖",label:"AI Music"},{icon:"🥁",label:"Metronome"},{icon:"🎸",label:"Backtrack"},{icon:"👂",label:"Ear Train"},{icon:"🎼",label:"Song Lab"}];
-export default function LoadingScreen(){
-  const nav=useNavigate();
-  const[p,setP]=useState(0);
-  const[mi,setMi]=useState(0);
-  const raf=useRef(null);const t0=useRef(null);
-  useEffect(()=>{
-    t0.current=performance.now();
-    const tick=now=>{const el=now-t0.current;const np=Math.min((el/2400)*100,100);setP(Math.floor(np));if(np<100)raf.current=requestAnimationFrame(tick);else setTimeout(()=>nav("/menu"),250);};
-    raf.current=requestAnimationFrame(tick);
-    return()=>cancelAnimationFrame(raf.current);
-  },[nav]);
-  useEffect(()=>{const t=setInterval(()=>setMi(i=>(i+1)%MSGS.length),600);return()=>clearInterval(t);},[]);
-  return(
-      <div className="loading-screen-container">
-        <div className="ls-blob ls-blob-1"/><div className="ls-blob ls-blob-2"/><div className="ls-blob ls-blob-3"/>
-        <div className="ls-dots"/>
-        <div className="ls-logo-wrap">
-          <div className="ls-rings">
-            <div className="ls-ring ls-ring-1"/><div className="ls-ring ls-ring-2"/>
-            <div className="ls-ring ls-ring-3"/><span className="ls-sym">𝅘𝅥𝅮</span>
-          </div>
-          <h1 className="ls-title">AudioAlchemy</h1>
-          <p className="ls-tagline">— compose your world —</p>
-          <div className="ls-progress-wrap">
-            <div className="ls-progress-header">
-              <span className="ls-progress-msg">{MSGS[mi]}</span>
-              <span className="ls-progress-pct">{p}%</span>
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import "../styles/LoadingScreen.css";
+
+const MESSAGES = [
+    "Tuning the instruments...",
+    "Warming up the synths...",
+    "Arranging the chords...",
+    "Polishing the sound...",
+    "Almost ready to jam!",
+];
+
+function LoadingScreen() {
+    const navigate = useNavigate();
+    const [progress, setProgress] = useState(0);
+    const [msgIdx, setMsgIdx] = useState(0);
+
+    useEffect(() => {
+        let current = 0;
+        const timer = setInterval(() => {
+            current += Math.random() * 8 + 3;
+            if (current >= 100) {
+                current = 100;
+                clearInterval(timer);
+                setTimeout(() => navigate("/menu"), 400);
+            }
+            setProgress(Math.min(Math.round(current), 100));
+            setMsgIdx(Math.floor((Math.min(current, 99) / 100) * MESSAGES.length));
+        }, 120);
+        return () => clearInterval(timer);
+    }, [navigate]);
+
+    return (
+        <div className="loading-screen">
+            <div className="loading-logo-area">
+                <svg className="loading-logo-svg" viewBox="0 0 80 80" fill="none" aria-label="AudioAlchemy">
+                    <circle cx="32" cy="58" r="18" fill="var(--primary-color)" stroke="var(--secondary-color)" strokeWidth="4"/>
+                    <rect x="48" y="8" width="9" height="54" rx="4.5" fill="var(--primary-color)" stroke="var(--secondary-color)" strokeWidth="3"/>
+                    <path d="M57 8 Q76 15 70 30 Q64 44 57 42" fill="var(--secondary-color)" opacity="0.85"/>
+                    <circle cx="32" cy="58" r="7" fill="var(--secondary-color)" opacity="0.7"/>
+                </svg>
+                <h1 className="loading-title">AudioAlchemy</h1>
+                <p className="loading-subtitle">Your Music Studio</p>
             </div>
-            <div className="ls-track"><div className="ls-fill" style={{width:p+"%"}}/></div>
-          </div>
+
+            <div className="loading-bar-wrapper">
+                <div className="loading-bar-track">
+                    <div className="loading-bar-fill" style={{ width: `${progress}%` }} />
+                </div>
+                <div className="loading-percent">{progress}%</div>
+            </div>
+
+            <p className="loading-message">{MESSAGES[msgIdx] || MESSAGES[0]}</p>
+
+            <div className="loading-note-ring">
+                {[0,1,2,3].map(i => <div key={i} className="loading-note-dot" />)}
+            </div>
         </div>
-        <div className="ls-hints">{HINTS.map(h=>(
-            <div key={h.label} className="ls-hint">
-              <div className="ls-hint-icon">{h.icon}</div>
-              <div className="ls-hint-text">{h.label}</div>
-            </div>))}
-        </div>
-      </div>
-  );
+    );
 }
+
+export default LoadingScreen;
