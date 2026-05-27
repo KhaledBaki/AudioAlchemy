@@ -5,22 +5,29 @@ import "../styles/SongLab.css";
 const STEPS = 16;
 
 const INSTRUMENT_CATALOG = [
-  { id: "kick",    name: "Kick Drum",    icon: "🥁", color: "#c0392b" },
-  { id: "snare",   name: "Snare",        icon: "🪘", color: "#e67e22" },
-  { id: "hihat",   name: "Hi-Hat",       icon: "🎵", color: "#f1c40f" },
-  { id: "piano",   name: "Piano",        icon: "🎹", color: "#2980b9" },
-  { id: "bass",    name: "Bass",         icon: "🎸", color: "#27ae60" },
-  { id: "strings", name: "Strings",      icon: "🎻", color: "#8e44ad" },
-  { id: "synth",   name: "Synth Lead",   icon: "🎛️", color: "#16a085" },
-  { id: "pad",     name: "Soft Pad",     icon: "🌊", color: "#2c3e50" },
+  { id: "kick",    name: "Kick Drum",  icon: "🥁" },
+  { id: "snare",   name: "Snare",      icon: "🪘" },
+  { id: "hihat",   name: "Hi-Hat",     icon: "🎵" },
+  { id: "piano",   name: "Piano",      icon: "🎹" },
+  { id: "bass",    name: "Bass",       icon: "🎸" },
+  { id: "strings", name: "Strings",    icon: "🎻" },
+  { id: "synth",   name: "Synth Lead", icon: "🎛️" },
+  { id: "pad",     name: "Soft Pad",   icon: "🌊" },
 ];
 
 const ALL_NOTES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+
+// Build a full list of playable notes: C2 – C7
+const NOTE_OPTIONS = [];
+for (let oct = 2; oct <= 7; oct++) {
+  ALL_NOTES.forEach(n => NOTE_OPTIONS.push({ label: `${n}${oct}`, midi: (oct + 1) * 12 + ALL_NOTES.indexOf(n) }));
+}
+
 const SCALE_PATTERNS = {
-  major: [0,2,4,5,7,9,11],
-  minor: [0,2,3,5,7,8,10],
+  major:      [0,2,4,5,7,9,11],
+  minor:      [0,2,3,5,7,8,10],
   pentatonic: [0,2,4,7,9],
-  blues: [0,3,5,6,7,10],
+  blues:      [0,3,5,6,7,10],
 };
 const CHORD_QUALITIES_MAJOR = ["","m","m","","","m","dim"];
 const CHORD_QUALITIES_MINOR = ["m","dim","","m","m","",""];
@@ -37,12 +44,17 @@ function getScaleChords(root, scale) {
 
 function midiFreq(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
 
+const DRUM_IDS = ["kick","snare","hihat"];
+const MELODIC_IDS = ["piano","bass","strings","synth","pad"];
+
+// Default midi per instrument (middle octave sensible defaults)
+const DEFAULT_MIDI = { piano: 60, bass: 48, strings: 64, synth: 67, pad: 55 };
+
 function playDrumSound(ctx, type, vol) {
   const now = ctx.currentTime;
   const g = ctx.createGain();
   g.connect(ctx.destination);
   g.gain.setValueAtTime(vol * 0.8, now);
-
   if (type === "kick") {
     const osc = ctx.createOscillator();
     osc.connect(g);
@@ -53,7 +65,7 @@ function playDrumSound(ctx, type, vol) {
   } else if (type === "snare") {
     const buf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const filt = ctx.createBiquadFilter();
@@ -64,7 +76,7 @@ function playDrumSound(ctx, type, vol) {
   } else if (type === "hihat") {
     const buf = ctx.createBuffer(1, ctx.sampleRate * 0.04, ctx.sampleRate);
     const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const filt = ctx.createBiquadFilter();
@@ -83,10 +95,8 @@ function playMelodicSound(ctx, instrumentId, midiNote, vol, dur) {
   filt.connect(ctx.destination);
   g.connect(filt);
   g.gain.setValueAtTime(0.0001, now);
-
   let oscType = "sine";
   filt.type = "lowpass";
-
   if (instrumentId === "piano") {
     oscType = "triangle"; filt.frequency.value = 2000;
     g.gain.linearRampToValueAtTime(vol * 0.25, now + 0.01);
@@ -112,7 +122,6 @@ function playMelodicSound(ctx, instrumentId, midiNote, vol, dur) {
     g.gain.linearRampToValueAtTime(vol * 0.2, now + 0.05);
     g.gain.linearRampToValueAtTime(0.001, now + dur - 0.05);
   }
-
   const osc = ctx.createOscillator();
   osc.type = oscType;
   osc.frequency.setValueAtTime(freq, now);
@@ -121,21 +130,19 @@ function playMelodicSound(ctx, instrumentId, midiNote, vol, dur) {
   osc.stop(now + dur);
 }
 
-const MELODIC_IDS = ["piano","bass","strings","synth","pad"];
-const DRUM_IDS = ["kick","snare","hihat"];
-
-const DEFAULT_MIDI = { piano: 60, bass: 48, strings: 64, synth: 67, pad: 55 };
-
+// A "step" is either false (off) or an object { midi }
 function createTrack(instrumentId) {
   const inst = INSTRUMENT_CATALOG.find(i => i.id === instrumentId) || INSTRUMENT_CATALOG[0];
+  const defaultMidi = DEFAULT_MIDI[instrumentId] || 60;
   return {
     id: Date.now() + Math.random(),
     instrumentId,
     name: inst.name,
     icon: inst.icon,
-    steps: Array(STEPS).fill(false),
+    // Each step: null = off, number = midi note (on)
+    steps: Array(STEPS).fill(null),
     volume: 0.8,
-    midiNote: DEFAULT_MIDI[instrumentId] || 60,
+    defaultMidi,
   };
 }
 
@@ -154,6 +161,8 @@ export default function SongLab() {
   const [selectedScale, setSelectedScale] = useState("major");
   const [selectedChords, setSelectedChords] = useState([]);
   const [showExport, setShowExport] = useState(false);
+  // Note picker popup state: { trackId, stepIdx } or null
+  const [notePicker, setNotePicker] = useState(null);
 
   const audioCtxRef = useRef(null);
   const playIntervalRef = useRef(null);
@@ -172,13 +181,15 @@ export default function SongLab() {
 
   const fireStep = useCallback((step) => {
     const ctx = getAudioCtx();
-    const dur = (60 / bpmRef.current);
+    const dur = 60 / bpmRef.current;
     tracksRef.current.forEach(track => {
-      if (!track.steps[step]) return;
+      const stepVal = track.steps[step];
+      if (stepVal === null || stepVal === undefined) return;
       if (DRUM_IDS.includes(track.instrumentId)) {
         playDrumSound(ctx, track.instrumentId, track.volume);
       } else {
-        playMelodicSound(ctx, track.instrumentId, track.midiNote, track.volume, dur * 0.85);
+        const midi = typeof stepVal === "number" ? stepVal : track.defaultMidi;
+        playMelodicSound(ctx, track.instrumentId, midi, track.volume, dur * 0.85);
       }
     });
   }, []);
@@ -205,10 +216,49 @@ export default function SongLab() {
 
   useEffect(() => () => clearInterval(playIntervalRef.current), []);
 
+  // Left-click: toggle step on/off (uses defaultMidi when turning on)
   const toggleStep = (trackId, stepIdx) => {
-    setTracks(prev => prev.map(t =>
-      t.id === trackId ? { ...t, steps: t.steps.map((v, i) => i === stepIdx ? !v : v) } : t
-    ));
+    setTracks(prev => prev.map(t => {
+      if (t.id !== trackId) return t;
+      const newSteps = [...t.steps];
+      newSteps[stepIdx] = newSteps[stepIdx] !== null ? null : t.defaultMidi;
+      return { ...t, steps: newSteps };
+    }));
+  };
+
+  // Right-click on an active melodic step: open note picker
+  const handleStepRightClick = (e, track, stepIdx) => {
+    e.preventDefault();
+    if (DRUM_IDS.includes(track.instrumentId)) return; // drums don't need note picker
+    if (track.steps[stepIdx] === null) return; // step is off, nothing to edit
+    setNotePicker({ trackId: track.id, stepIdx });
+  };
+
+  // Called from note picker to set the note for a specific step
+  const setStepNote = (trackId, stepIdx, midi) => {
+    setTracks(prev => prev.map(t => {
+      if (t.id !== trackId) return t;
+      const newSteps = [...t.steps];
+      newSteps[stepIdx] = midi;
+      return { ...t, steps: newSteps };
+    }));
+    setNotePicker(null);
+    // Preview the note
+    const ctx = getAudioCtx();
+    const track = tracks.find(t => t.id === trackId);
+    if (track) playMelodicSound(ctx, track.instrumentId, midi, track.volume, 0.6);
+  };
+
+  // Set ALL active steps of a track to the same note
+  const setTrackDefaultNote = (trackId, midi) => {
+    setTracks(prev => prev.map(t => {
+      if (t.id !== trackId) return t;
+      const newSteps = t.steps.map(s => s !== null ? midi : null);
+      return { ...t, defaultMidi: midi, steps: newSteps };
+    }));
+    const ctx = getAudioCtx();
+    const track = tracks.find(t => t.id === trackId);
+    if (track) playMelodicSound(ctx, track.instrumentId, midi, track.volume, 0.6);
   };
 
   const setVolume = (trackId, vol) => {
@@ -226,7 +276,7 @@ export default function SongLab() {
 
   const clearAll = () => {
     stopSequencer();
-    setTracks(prev => prev.map(t => ({ ...t, steps: Array(STEPS).fill(false) })));
+    setTracks(prev => prev.map(t => ({ ...t, steps: Array(STEPS).fill(null) })));
   };
 
   const scaleChords = getScaleChords(selectedKey, selectedScale);
@@ -239,13 +289,18 @@ export default function SongLab() {
 
   const buildExport = () => {
     const lines = [
-      `🎼 SongLab Blueprint — AudioAlchemy`,
+      "🎼 SongLab Blueprint — AudioAlchemy",
       `Key: ${selectedKey} ${selectedScale} | BPM: ${bpm}`,
       selectedChords.length ? `Chord Progression: ${selectedChords.join(" → ")}` : "",
-      ``,
-      `Tracks:`,
+      "",
+      "Tracks:",
       ...tracks.map(t => {
-        const pattern = t.steps.map((on, i) => on ? (i % 4 === 0 ? "X" : "x") : "·").join(" ");
+        const pattern = t.steps.map((s, i) => {
+          if (s === null) return "·";
+          if (DRUM_IDS.includes(t.instrumentId)) return i % 4 === 0 ? "X" : "x";
+          const noteObj = NOTE_OPTIONS.find(n => n.midi === s);
+          return noteObj ? noteObj.label : "x";
+        }).join(" ");
         return `  ${t.icon} ${t.name.padEnd(12)} | ${pattern} | vol: ${Math.round(t.volume * 100)}%`;
       }),
     ].filter(Boolean);
@@ -256,26 +311,52 @@ export default function SongLab() {
     tracks.filter(t => t.instrumentId === inst.id).length < 2
   );
 
-  const sliderBg = (val) => `linear-gradient(to right, var(--primary-color) ${val*100}%, var(--border-color) ${val*100}%)`;
+  const sliderBg = (val) =>
+    `linear-gradient(to right, var(--primary-color) ${val * 100}%, var(--border-color) ${val * 100}%)`;
+
+  // Note picker popup component (inline)
+  const pickerTrack = notePicker ? tracks.find(t => t.id === notePicker.trackId) : null;
+  const pickerCurrentMidi = pickerTrack && notePicker ? pickerTrack.steps[notePicker.stepIdx] : null;
 
   return (
-    <div className="songlab-page">
+    <div className="songlab-page" onClick={() => setNotePicker(null)}>
+      {/* Note Picker Popup */}
+      {notePicker && pickerTrack && (
+        <div className="note-picker-overlay" onClick={e => e.stopPropagation()}>
+          <div className="note-picker-popup">
+            <div className="note-picker-header">
+              <span>{pickerTrack.icon} {pickerTrack.name} — Step {notePicker.stepIdx + 1}</span>
+              <button className="note-picker-close" onClick={() => setNotePicker(null)}>✕</button>
+            </div>
+            <div className="note-picker-hint">Click a note to set it. Scroll to see all octaves.</div>
+            <div className="note-picker-grid">
+              {NOTE_OPTIONS.map(({ label, midi }) => (
+                <button
+                  key={midi}
+                  className={`note-picker-btn${midi === pickerCurrentMidi ? " note-picker-selected" : ""}${ALL_NOTES.indexOf(label.replace(/\d/g, "")) === 0 ? " note-picker-c" : ""}${label.includes("#") ? " note-picker-sharp" : ""}`}
+                  onClick={() => setStepNote(notePicker.trackId, notePicker.stepIdx, midi)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Bar */}
       <div className="songlab-topbar">
         <div className="songlab-topbar-left">
-          <button className="back-btn" onClick={() => { stopSequencer(); navigate("/menu"); }}>
-            ← Menu
-          </button>
+          <button className="back-btn" onClick={() => { stopSequencer(); navigate("/menu"); }}>← Menu</button>
           <h1 className="songlab-title">🎼 SongLab</h1>
         </div>
-
         <div className="songlab-controls">
           <div className="bpm-control">
             <span className="bpm-label">BPM</span>
             <span className="bpm-value">{bpm}</span>
             <input
               type="range" className="bpm-slider" min="40" max="220" value={bpm}
-              onChange={e => { setBpm(+e.target.value); if (isPlaying) { stopSequencer(); } }}
+              onChange={e => { setBpm(+e.target.value); if (isPlaying) stopSequencer(); }}
               style={{ background: sliderBg((bpm - 40) / 180) }}
             />
           </div>
@@ -287,6 +368,13 @@ export default function SongLab() {
             {isPlaying ? "⏹ Stop" : "▶ Play"}
           </button>
         </div>
+      </div>
+
+      {/* Legend */}
+      <div className="songlab-legend">
+        <span className="legend-item"><span className="legend-dot legend-left" />Left-click step to toggle on/off</span>
+        <span className="legend-item"><span className="legend-dot legend-right" />Right-click an active melodic step to change its note</span>
+        <span className="legend-item"><span className="legend-dot legend-track" />Use the note selector on each melodic track to set a default note for all steps</span>
       </div>
 
       {/* Sequencer Grid */}
@@ -306,31 +394,64 @@ export default function SongLab() {
         </div>
 
         {/* Tracks */}
-        {tracks.map(track => (
-          <div key={track.id} className="track-row">
-            <div className="track-info">
-              <span className="track-icon">{track.icon}</span>
-              <span className="track-name">{track.name}</span>
-              <button className="track-remove" onClick={() => removeTrack(track.id)} aria-label={`Remove ${track.name}`}>×</button>
+        {tracks.map(track => {
+          const isMelodic = MELODIC_IDS.includes(track.instrumentId);
+          return (
+            <div key={track.id} className="track-row">
+              <div className="track-info">
+                <span className="track-icon">{track.icon}</span>
+                <div className="track-info-col">
+                  <span className="track-name">{track.name}</span>
+                  {isMelodic && (
+                    <div className="track-note-selector">
+                      <span className="track-note-label">Default:</span>
+                      <select
+                        className="track-note-select"
+                        value={track.defaultMidi}
+                        onChange={e => setTrackDefaultNote(track.id, +e.target.value)}
+                        title="Set note for all active steps on this track"
+                      >
+                        {NOTE_OPTIONS.map(({ label, midi }) => (
+                          <option key={midi} value={midi}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+                <button className="track-remove" onClick={() => removeTrack(track.id)} aria-label={`Remove ${track.name}`}>×</button>
+              </div>
+
+              {track.steps.map((stepVal, i) => {
+                const isOn = stepVal !== null;
+                const noteObj = isOn && isMelodic ? NOTE_OPTIONS.find(n => n.midi === stepVal) : null;
+                const noteLabel = noteObj ? noteObj.label : null;
+                return (
+                  <button
+                    key={i}
+                    className={`step-btn${isOn ? " active" : ""}${isOn && i % 4 === 0 ? " beat-one-col" : ""}${currentStep === i ? " playing-step" : ""}${isOn && isMelodic ? " has-note" : ""}`}
+                    onClick={() => toggleStep(track.id, i)}
+                    onContextMenu={(e) => handleStepRightClick(e, track, i)}
+                    title={isMelodic && isOn ? `Note: ${noteLabel} — right-click to change` : isMelodic ? "Left-click to enable, then right-click to pick note" : ""}
+                    aria-label={`Step ${i + 1} ${isOn ? "on" : "off"}`}
+                  >
+                    {isOn && isMelodic && noteLabel && (
+                      <span className="step-note-label">{noteLabel}</span>
+                    )}
+                  </button>
+                );
+              })}
+
+              <div>
+                <input
+                  type="range" className="vol-slider" min="0" max="1" step="0.01"
+                  value={track.volume}
+                  onChange={e => setVolume(track.id, +e.target.value)}
+                  style={{ background: sliderBg(track.volume) }}
+                />
+              </div>
             </div>
-            {track.steps.map((on, i) => (
-              <button
-                key={i}
-                className={`step-btn${on ? " active" : ""}${on && i % 4 === 0 ? " beat-one-col" : ""}${currentStep === i ? " playing-step" : ""}`}
-                onClick={() => toggleStep(track.id, i)}
-                aria-label={`Step ${i + 1} ${on ? "on" : "off"}`}
-              />
-            ))}
-            <div>
-              <input
-                type="range" className="vol-slider" min="0" max="1" step="0.01"
-                value={track.volume}
-                onChange={e => setVolume(track.id, +e.target.value)}
-                style={{ background: sliderBg(track.volume) }}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Add Track Row */}
         <div className="add-track-row">
@@ -340,7 +461,9 @@ export default function SongLab() {
               {inst.icon} {inst.name}
             </button>
           ))}
-          {tracks.length >= 8 && <span className="add-track-label" style={{ color: "var(--secondary-color)" }}>Max 8 tracks reached</span>}
+          {tracks.length >= 8 && (
+            <span className="add-track-label" style={{ color: "var(--secondary-color)" }}>Max 8 tracks</span>
+          )}
         </div>
       </div>
 
@@ -348,9 +471,7 @@ export default function SongLab() {
       <div className="songlab-panels">
         {/* Chord Picker */}
         <div className="info-panel">
-          <div className="info-panel-title">
-            🎵 Chord Picker
-          </div>
+          <div className="info-panel-title">🎵 Chord Picker</div>
           <div className="key-select-row">
             <select className="form-select" value={selectedKey} onChange={e => setSelectedKey(e.target.value)} style={{ flex: 1 }}>
               {ALL_NOTES.map(n => <option key={n} value={n}>{n}</option>)}
@@ -363,7 +484,7 @@ export default function SongLab() {
             </select>
           </div>
           <p style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginBottom: "var(--sp-3)" }}>
-            Click chords to build your progression:
+            Click to build your progression:
           </p>
           <div className="chords-grid">
             {scaleChords.map(ch => (
@@ -388,21 +509,18 @@ export default function SongLab() {
         <div className="info-panel">
           <div className="info-panel-title">📋 Song Blueprint</div>
           <p style={{ fontSize: "var(--text-xs)", color: "var(--text-muted)", marginBottom: "var(--sp-3)" }}>
-            Export a text summary of your song pattern to share or save.
+            Export a text summary of your pattern including all per-step notes.
           </p>
           <button className="btn-primary" style={{ marginBottom: "var(--sp-3)", width: "100%" }} onClick={() => setShowExport(v => !v)}>
             {showExport ? "Hide Blueprint" : "Generate Blueprint"}
           </button>
-          {showExport && (
-            <pre className="export-box">{buildExport()}</pre>
-          )}
+          {showExport && <pre className="export-box">{buildExport()}</pre>}
           {showExport && (
             <button
               className="btn-secondary"
               style={{ marginTop: "var(--sp-3)", width: "100%" }}
               onClick={() => {
-                const txt = buildExport();
-                const blob = new Blob([txt], { type: "text/plain" });
+                const blob = new Blob([buildExport()], { type: "text/plain" });
                 const a = document.createElement("a");
                 a.href = URL.createObjectURL(blob);
                 a.download = "songlab-blueprint.txt";
@@ -413,14 +531,12 @@ export default function SongLab() {
             </button>
           )}
           <div style={{ marginTop: "var(--sp-4)", padding: "var(--sp-3)", background: "var(--surface-offset)", border: "2px solid var(--border-color)", borderRadius: "var(--r-md)" }}>
-            <div style={{ fontSize: "var(--text-xs)", fontWeight: "700", color: "var(--text-muted)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "var(--sp-2)" }}>
-              Quick Stats
-            </div>
+            <div style={{ fontSize: "var(--text-xs)", fontWeight: "700", color: "var(--text-muted)", letterSpacing: "1px", textTransform: "uppercase", marginBottom: "var(--sp-2)" }}>Quick Stats</div>
             <div style={{ display: "flex", gap: "var(--sp-4)", flexWrap: "wrap" }}>
               {[
                 { label: "Tracks", value: tracks.length },
                 { label: "BPM", value: bpm },
-                { label: "Active Steps", value: tracks.reduce((a, t) => a + t.steps.filter(Boolean).length, 0) },
+                { label: "Active Steps", value: tracks.reduce((a, t) => a + t.steps.filter(s => s !== null).length, 0) },
                 { label: "Key", value: `${selectedKey} ${selectedScale}` },
               ].map(s => (
                 <div key={s.label} style={{ textAlign: "center" }}>
