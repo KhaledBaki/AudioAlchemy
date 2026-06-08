@@ -9,7 +9,7 @@ function MainMenu({ selectedTheme, setSelectedTheme }) {
 
     const features = [
         { label: "Freeform Music",          desc: "Play chords with your keyboard",    icon: "🎹", path: "/freeform",     isNew: false },
-        { label: "AI Song Generator",        desc: "Describe music, get a blueprint",   icon: "✨", path: "/ai-assisted",  isNew: false },
+        { label: "Assisted Song Generator",        desc: "Describe music, get a blueprint",   icon: "✨", path: "/ai-assisted",  isNew: false },
         { label: "Backtracking",             desc: "Practice over chord progressions",  icon: "🎸", path: "/backtracking", isNew: false },
         { label: "Metronome",                desc: "Perfect your timing & rhythm",      icon: "🥁", path: "/metronome",    isNew: false },
         { label: "SongLab",                  desc: "Build & layer a full song",         icon: "🎼", path: "/songlab",      isNew: true  },

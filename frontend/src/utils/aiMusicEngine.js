@@ -63,7 +63,7 @@ export function analyzeMusicRequest(input) {
         melodyNotes = ["F4", "Ab4", "C5", "Eb5"];
     }
 
-    const title = `AI Track - ${capitalize(genre)} ${capitalize(mood)}`;
+    const title = `Generated Track - ${capitalize(genre)} ${capitalize(mood)}`;
     const description =
         `Prompt: ${input.prompt || ""} | Genre: ${genre} | Mood: ${mood} | BPM: ${tempo} | Duration: ${duration} sec | ` +
         (instrumentalOnly ? "Instrumental only" : "Vocals allowed");
