@@ -39,7 +39,7 @@ function AIGenerator() {
                 </div>
 
                 <div className="ai-generator-header">
-                    <h2>✨ AI Music Generator</h2>
+                    <h2>✨ Assisted Music Generator</h2>
                     <p>Describe your music idea and get a full blueprint with chords, melody & tempo.</p>
                 </div>
 
