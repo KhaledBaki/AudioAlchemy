@@ -17,7 +17,7 @@ function App() {
     }, [selectedTheme]);
 
     return (
-        <BrowserRouter>
+        <BrowserRouter basename = "/AudioAlchemy/">
             <Routes>
                 <Route path="/" element={<LoadingScreen />} />
                 <Route path="/menu" element={<MainMenu selectedTheme={selectedTheme} setSelectedTheme={setSelectedTheme} />} />
