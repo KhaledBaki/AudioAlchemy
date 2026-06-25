@@ -35,3 +35,5 @@
 - Java Spring Boot
 - Maven
 
+## General Note
+- The offical "Finalized work" of this project is on branch V3.0, make sure you refer to it for inspiration.
