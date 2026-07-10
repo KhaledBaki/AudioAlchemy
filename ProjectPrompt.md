@@ -7,7 +7,7 @@
 - When you give me code, it is your responsibility to make sure you aren't using crazy high-end professional coding. 
 - Make sure that the code you give me can be understood by any second year student reading it. 
 
-## Assignming Tasks
+## Assigning Tasks
 - For this project, I have decided to build a "Music Creator" website.
 - This website has numerous features. The following features are listed in the PDF I attached to this space.
 
@@ -20,7 +20,7 @@
 - Theme of the website: Rustic, Concert Black, Summer Beach 
 - The “Mascot” of the website is going to be an eight note.
 - Metronome option has the eight note jump in accordance to the BPM
-- Selecting Differnt Features/Modes 
+- Selecting Different Features/Modes 
 - Custom Music Creation
 - Assisted Song Creation
 - Backtracking
@@ -120,3 +120,4 @@ Always explain WHY we are doing something before coding it.
 8. Backtracking
 9. AI-Assisted Generation
 10. Save/Load Features
+
