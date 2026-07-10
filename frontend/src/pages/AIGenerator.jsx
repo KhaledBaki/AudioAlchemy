@@ -3,7 +3,10 @@ import "./AIGenerator.css";
 import { useNavigate } from "react-router-dom";
 import { analyzeMusicRequest } from "../utils/aiMusicEngine";
 
-function AIGenerator({ onBack }) {
+const GENRES = ["Cinematic","Lofi","Electronic","Jazz","Classical","R&B","Ambient","Rock"];
+const MOODS  = ["Heroic","Happy","Calm","Sad","Dark","Energetic","Romantic","Mysterious"];
+
+function AIGenerator() {
     const [prompt, setPrompt] = useState("");
     const [genre, setGenre] = useState("Cinematic");
     const [mood, setMood] = useState("Heroic");
@@ -13,125 +16,108 @@ function AIGenerator({ onBack }) {
     const [generatedTrack, setGeneratedTrack] = useState(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const navigate = useNavigate();
-    const handleGenerateTrack = () => {
+
+    const handleGenerate = () => {
+        setIsGenerating(true);
         try {
-            setIsGenerating(true);
-
-            const result = analyzeMusicRequest({
-                prompt,
-                genre,
-                mood,
-                bpm,
-                duration,
-                instrumentalOnly
-            });
-
+            const result = analyzeMusicRequest({ prompt, genre, mood, bpm, duration, instrumentalOnly });
             setTimeout(() => {
                 setGeneratedTrack(result);
                 setIsGenerating(false);
-            }, 700);
-        } catch (error) {
-            console.error("Generation error:", error);
-            alert("Generation failed.");
+            }, 900);
+        } catch (e) {
+            console.error(e);
             setIsGenerating(false);
         }
     };
 
     return (
         <div className="ai-generator-page">
-            <div className="ai-generator-topbar">
-                <button
-                    className="back-button ai-menu-button"
-                    type="button"
-                    onClick={() => navigate("/menu")}
-                >
-                    Back to Main Menu
-                </button>
-            </div>
             <div className="ai-generator-card">
-                <div className="ai-generator-header">
-                    <h2>AI Music Generator</h2>
-                    <p>Create a local music idea with no backend.</p>
+                <div className="ai-generator-topbar">
+                    <button className="back-button" onClick={() => navigate("/menu")}>← Menu</button>
                 </div>
 
-
-                {onBack && (
-                    <button className="back-button" onClick={onBack}>
-                        Back to Main Menu
-                    </button>
-                )}
+                <div className="ai-generator-header">
+                    <h2>✨ Assisted Music Generator</h2>
+                    <p>Describe your music idea and get a full blueprint with chords, melody & tempo.</p>
+                </div>
 
                 <div className="ai-generator-form">
-                    <label>Prompt</label>
-                    <textarea
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder="Describe the music you want..."
-                    />
+                    <div>
+                        <label>Your idea or vibe</label>
+                        <textarea
+                            className="form-textarea"
+                            value={prompt}
+                            onChange={e => setPrompt(e.target.value)}
+                            placeholder="e.g. A rainy afternoon in a jazz café, melancholic but warm..."
+                        />
+                    </div>
 
-                    <label>Genre</label>
-                    <select value={genre} onChange={(e) => setGenre(e.target.value)}>
-                        <option value="Cinematic">Cinematic</option>
-                        <option value="Lofi">Lofi</option>
-                        <option value="Electronic">Electronic</option>
-                        <option value="Jazz">Jazz</option>
-                    </select>
+                    <div className="ai-form-row">
+                        <div>
+                            <label>Genre</label>
+                            <select className="form-select" value={genre} onChange={e => setGenre(e.target.value)}>
+                                {GENRES.map(g => <option key={g}>{g}</option>)}
+                            </select>
+                        </div>
+                        <div>
+                            <label>Mood</label>
+                            <select className="form-select" value={mood} onChange={e => setMood(e.target.value)}>
+                                {MOODS.map(m => <option key={m}>{m}</option>)}
+                            </select>
+                        </div>
+                    </div>
 
-                    <label>Mood</label>
-                    <select value={mood} onChange={(e) => setMood(e.target.value)}>
-                        <option value="Heroic">Heroic</option>
-                        <option value="Happy">Happy</option>
-                        <option value="Calm">Calm</option>
-                        <option value="Sad">Sad</option>
-                        <option value="Dark">Dark</option>
-                    </select>
-
-                    <label>BPM</label>
-                    <input
-                        type="number"
-                        value={bpm}
-                        onChange={(e) => setBpm(e.target.value)}
-                        min="40"
-                        max="220"
-                    />
-
-                    <label>Duration (seconds)</label>
-                    <input
-                        type="number"
-                        value={duration}
-                        onChange={(e) => setDuration(e.target.value)}
-                        min="5"
-                        max="180"
-                    />
+                    <div className="ai-form-row">
+                        <div>
+                            <label>BPM</label>
+                            <input type="number" className="form-input" value={bpm} onChange={e => setBpm(+e.target.value)} min="40" max="220" />
+                        </div>
+                        <div>
+                            <label>Duration (sec)</label>
+                            <input type="number" className="form-input" value={duration} onChange={e => setDuration(+e.target.value)} min="5" max="300" />
+                        </div>
+                    </div>
 
                     <label className="checkbox-row">
-                        <input
-                            type="checkbox"
-                            checked={instrumentalOnly}
-                            onChange={(e) => setInstrumentalOnly(e.target.checked)}
-                        />
-                        Instrumental only
+                        <input type="checkbox" checked={instrumentalOnly} onChange={e => setInstrumentalOnly(e.target.checked)} />
+                        Instrumental only (no vocals)
                     </label>
 
                     <button
-                        className="generate-button"
-                        onClick={handleGenerateTrack}
+                        className={`generate-button${isGenerating ? " loading" : ""}`}
+                        onClick={handleGenerate}
                         disabled={isGenerating}
                     >
-                        {isGenerating ? "Generating..." : "Generate Track"}
+                        {isGenerating ? "Generating your blueprint..." : "✨ Generate Track Blueprint"}
                     </button>
                 </div>
 
                 {generatedTrack && (
                     <div className="generated-result">
                         <h3>{generatedTrack.title}</h3>
-                        <p>{generatedTrack.description}</p>
-                        <p><strong>Mood:</strong> {generatedTrack.mood}</p>
-                        <p><strong>Scale:</strong> {generatedTrack.scale}</p>
-                        <p><strong>Tempo:</strong> {generatedTrack.tempo}</p>
-                        <p><strong>Instrument:</strong> {generatedTrack.instrument}</p>
-                        <p><strong>Chord Progression:</strong> {generatedTrack.chordProgression}</p>
-                        <p><strong>Melody Notes:</strong> {generatedTrack.melodyNotes.join(" - ")}</p>
+                        <div className="result-grid">
+                            {[
+                                { label: "Mood",       value: generatedTrack.mood },
+                                { label: "Scale",      value: generatedTrack.scale },
+                                { label: "Tempo",      value: `${generatedTrack.tempo} BPM` },
+                                { label: "Instrument", value: generatedTrack.instrument },
+                            ].map(item => (
+                                <div key={item.label} className="result-item">
+                                    <div className="result-item-label">{item.label}</div>
+                                    <div className="result-item-value">{item.value}</div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="result-progression">
+                            🎵 {generatedTrack.chordProgression}
+                        </div>
+                        <div className="result-notes">
+                            {generatedTrack.melodyNotes.map((n, i) => (
+                                <span key={i} className="note-chip">{n}</span>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>
